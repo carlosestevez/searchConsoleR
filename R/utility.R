@@ -38,7 +38,9 @@ lookupCountryCode <- function(country.code,
 #'   operator = c(`~~` = 'contains',
 #'                `==` = 'equals',
 #'                `!~` = 'notContains',
-#'                 `!=` = 'notEquals)
+#'                 `!=` = 'notEquals,
+#'                 `??` = 'includingRegex',
+#'                 `!?` = 'excludingRegex',)
 #'
 #'  expression = country: an ISO 3166-1 alpha-3 country code.
 #'               device: 'DESKTOP','MOBILE','TABLET'
@@ -57,11 +59,13 @@ parseDimFilterGroup <- function(dfe){
   op_symbol <-  c("~~" = 'contains',
                   "==" = 'equals',
                   "!~" = 'notContains',
-                  "!=" = 'notEquals')
+                  "!=" = 'notEquals',
+                  "??" = 'includingRegex',
+                  "!?" = 'excludingRegex')
 
   ## extract variables needed
-  operator <- stringr::str_extract(dfe, "[\\!=~]{2}")
-  dim_ex <- stringr::str_split_fixed(dfe, "[\\!=~]{2}", n=2)
+  operator <- stringr::str_extract(dfe, "[\\!=~\\?]{2}")
+  dim_ex <- stringr::str_split_fixed(dfe, "[\\!=~\\?]{2}", n=2)
 
   ## remove whitespace apart from expression
   dim_ex[1] <- stringr::str_replace_all(dim_ex[1]," ","")
@@ -77,7 +81,7 @@ parseDimFilterGroup <- function(dfe){
   }
 
   if(!op_symbol[operator] %in% op_symbol){
-    stop("Operator not one of ~~, ==, !~ or !=.")
+    stop("Operator not one of ~~, ==, !~, !=, ?? or !?.")
   }
   
   if(is.na(operator) || nchar(dim_ex[2]) == 0){
