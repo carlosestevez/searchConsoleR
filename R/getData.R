@@ -7,7 +7,7 @@
 #' @param endDate End date of the requested date range, in YYYY-MM-DD.
 #' @param dimensions Zero or more dimensions to group results by:
 #'      \code{"date", "country", "device", "page" , "query" or "searchAppearance"}
-#' @param searchType Search type filter, default 'web'.
+#' @param type Search type filter, default 'web'.
 #' @param dimensionFilterExp A character vector of expressions to filter.
 #'      e.g. \code{("device==TABLET", "country~~GBR")}
 #' @param aggregationType How data is aggregated.
@@ -67,7 +67,9 @@
 #'         \item '~~' meaning 'contains'
 #'         \item '==' meaning 'equals'
 #'         \item '!~' meaning 'notContains'
-#'         \item '!=' meaning 'notEquals
+#'         \item '!=' meaning 'notEquals'
+#'         \item '??' meaning 'includingRegex'
+#'         \item '!?' meaning 'excludingRegex'
 #'       }
 #'
 #'     \item expression
@@ -82,11 +84,14 @@
 #'   }
 #'
 #'
-#'  \strong{searchType}: [Optional] The search type to filter for. Acceptable values are:
+#'  \strong{type}: [Optional] The search type to filter for. Acceptable values are:
 #'  \itemize{
 #'    \item "web": [Default] Web search results
 #'    \item "image": Image search results
 #'    \item "video": Video search results
+#'    \item "news": News results from "News" tab in Google Search
+#'    \item "discover": Google Discover results
+#'    \item "googleNews": Results from news.google.com and the Google News app on Android and iOS.
 #'  }
 #'
 #'  \strong{aggregationType}: [Optional] How data is aggregated.
@@ -143,7 +148,7 @@ search_analytics <- function(siteURL,
                              startDate = Sys.Date() - 93,
                              endDate = Sys.Date() - 3,
                              dimensions = NULL,
-                             searchType = c("web","video","image"),
+                             type = c("web","video","image", "news", "discover", "googleNews"),
                              dimensionFilterExp = NULL,
                              aggregationType = c("auto","byPage","byProperty"),
                              rowLimit = 1000,
@@ -154,7 +159,7 @@ search_analytics <- function(siteURL,
     stop("Not authenticated. Run scr_auth()", call. = FALSE)
   }
 
-  searchType      <- match.arg(searchType)
+  type            <- match.arg(type)
   aggregationType <- match.arg(aggregationType)
   walk_data       <- match.arg(walk_data)
 
@@ -166,7 +171,7 @@ search_analytics <- function(siteURL,
                 "dates:", startDate, endDate,
                 "dimensions:", paste(dimensions, collapse = " ", sep=";"),
                 "dimensionFilterExp:", paste(dimensionFilterExp, collapse = " ", sep=";"),
-                "searchType:", searchType,
+                "type:",type,
                 "aggregationType:", aggregationType))
 
   siteURL <- check.Url(siteURL, reserved=T)
@@ -184,8 +189,8 @@ search_analytics <- function(siteURL,
          Got this: ", paste(dimensions, sep=", "))
   }
 
-  if(!searchType %in% c("web","image","video")){
-    stop('searchType not one of "web","image","video".  Got this: ', searchType)
+  if(!type %in% c("web","image","video", "news", "discover", "googleNews")){
+    stop('type not one of "web","image","video", "news", "discover", "googleNews".  Got this: ', type)
   }
 
 
@@ -224,7 +229,7 @@ search_analytics <- function(siteURL,
     startDate = startDate,
     endDate = endDate,
     dimensions = as.list(dimensions),
-    searchType = searchType,
+    type = type,
     dimensionFilterGroups = list(
       list( ## you don't want more than one of these until different groupType available
         groupType = "and", ##only one available for now
